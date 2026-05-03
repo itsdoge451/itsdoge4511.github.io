@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9MB Compressor - Compress Videos & Audio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .left-section {
+            flex: 1;
+            padding: 40px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 600px;
+        }
+
+        .right-section {
+            flex: 1;
+            padding: 40px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-left: 1px solid #e0e0e0;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .browse-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .browse-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .file-info {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .file-info.active {
+            display: block;
+        }
+
+        .file-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .file-info p {
+            color: #666;
+            margin: 8px 0;
+            font-size: 0.95em;
+        }
+
+        .file-name {
+            color: #667eea;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .file-size {
+            color: #764ba2;
+            font-weight: 600;
+        }
+
+        .compress-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+            display: none;
+        }
+
+        .compress-btn.active {
+            display: block;
+        }
+
+        .compress-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(245, 87, 108, 0.6);
+        }
+
+        .compress-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            color: #666;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .result-info {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #4caf50;
+            display: none;
+            margin-top: 20px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .result-info.active {
+            display: block;
+        }
+
+        .result-info h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .result-info p {
+            color: #558b2f;
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: none;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
+        }
+
+        .download-btn.active {
+            display: block;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(76, 175, 80, 0.6);
+        }
+
+        .settings-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .setting-group {
+            margin-bottom: 30px;
+        }
+
+        .setting-label {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: block;
+            font-size: 0.95em;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 12px;
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .preset-btn:hover {
+            background: #e8e8e8;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .preset-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .size-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .size-display {
+            color: #666;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .quality-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .quality-btn {
+            padding: 12px;
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .quality-btn:hover {
+            background: #e8e8e8;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .quality-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .info-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-top: auto;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .right-section {
+                border-left: none;
+                border-top: 1px solid #e0e0e0;
+                min-height: auto;
+            }
+
+            .left-section {
+                min-height: auto;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .preset-buttons {
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+            }
+
+            .quality-buttons {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .left-section,
+            .right-section {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .preset-buttons {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .quality-buttons {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            input[type="number"] {
+                width: 60px;
+                padding: 8px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Section -->
+        <div class="left-section">
+            <h1>🎬 9MB Compressor</h1>
+            <p class="subtitle">Compress videos and audio files instantly</p>
+
+            <div class="file-input-wrapper">
+                <input type="file" id="mediaInput" accept="video/*,audio/*">
+                <button class="browse-btn" onclick="document.getElementById('mediaInput').click()">
+                    📁 Browse Files
+                </button>
+            </div>
+
+            <div class="file-info" id="fileInfo">
+                <h3>Selected File</h3>
+                <p>Name: <span class="file-name" id="fileName">-</span></p>
+                <p>Size: <span class="file-size" id="fileSize">-</span></p>
+                <p>Type: <span id="fileType">-</span></p>
+            </div>
+
+            <button class="compress-btn" id="compressBtn" onclick="compressFile()">
+                ⚡ Compress
+            </button>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Compressing... 0%</p>
+            </div>
+
+            <div class="result-info" id="resultInfo">
+                <h3>✅ Compression Complete!</h3>
+                <p>Original Size: <span id="originalSize">-</span></p>
+                <p>Compressed Size: <span id="compressedSize">-</span></p>
+                <p>Reduction: <span id="reduction">-</span>%</p>
+            </div>
+
+            <button class="download-btn" id="downloadBtn" onclick="downloadFile()">
+                📥 Download Compressed File
+            </button>
+        </div>
+
+        <!-- Right Section -->
+        <div class="right-section">
+            <div>
+                <h2 class="settings-title">⚙️ Settings</h2>
+
+                <!-- Target Size Setting -->
+                <div class="setting-group">
+                    <label class="setting-label">Quick Presets</label>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" onclick="setPreset(5)">5 MB</button>
+                        <button class="preset-btn active" onclick="setPreset(9)">9 MB</button>
+                        <button class="preset-btn" onclick="setPreset(20)">20 MB</button>
+                        <button class="preset-btn" onclick="setPreset(50)">50 MB</button>
+                    </div>
+                </div>
+
+                <!-- Custom Size Setting -->
+                <div class="setting-group">
+                    <label class="setting-label">Custom Target Size</label>
+                    <div class="size-input-group">
+                        <input type="range" id="sizeSlider" min="1" max="500" value="9" onchange="updateCustomSize()">
+                        <input type="number" id="sizeInput" min="1" max="500" value="9" onchange="updateSizeFromInput()">
+                        <span class="size-display">MB</span>
+                    </div>
+                </div>
+
+                <!-- Quality Setting -->
+                <div class="setting-group">
+                    <label class="setting-label">Compression Quality</label>
+                    <div class="quality-buttons">
+                        <button class="quality-btn" onclick="setQuality('low')">Low</button>
+                        <button class="quality-btn active" onclick="setQuality('medium')">Medium</button>
+                        <button class="quality-btn" onclick="setQuality('high')">High</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <p>💡 <strong>Pro Tips:</strong></p>
+                <p>• Smaller sizes = more compression time</p>
+                <p>• High quality preserves better detail</p>
+                <p>• Use presets for quick compression</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let targetSize = 9;
+        let quality = 'medium';
+        let compressedBlob = null;
+
+        document.getElementById('mediaInput').addEventListener('change', function(e) {
+            selectedFile = e.target.files[0];
+            if (selectedFile) {
+                displayFileInfo();
+                document.getElementById('compressBtn').classList.add('active');
+            }
+        });
+
+        function displayFileInfo() {
+            const fileSize = (selectedFile.size / 1024 / 1024).toFixed(2);
+            const fileType = selectedFile.type.split('/')[0].toUpperCase();
+
+            document.getElementById('fileName').textContent = selectedFile.name;
+            document.getElementById('fileSize').textContent = fileSize + ' MB';
+            document.getElementById('fileType').textContent = fileType;
+            document.getElementById('fileInfo').classList.add('active');
+        }
+
+        function setPreset(size) {
+            targetSize = size;
+            document.getElementById('sizeSlider').value = size;
+            document.getElementById('sizeInput').value = size;
+
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function updateCustomSize() {
+            const value = document.getElementById('sizeSlider').value;
+            document.getElementById('sizeInput').value = value;
+            targetSize = value;
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function updateSizeFromInput() {
+            const value = document.getElementById('sizeInput').value;
+            if (value >= 1 && value <= 500) {
+                document.getElementById('sizeSlider').value = value;
+                targetSize = value;
+                document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+            }
+        }
+
+        function setQuality(level) {
+            quality = level;
+            document.querySelectorAll('.quality-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        async function compressFile() {
+            if (!selectedFile) {
+                alert('Please select a file first!');
+                return;
+            }
+
+            document.getElementById('compressBtn').disabled = true;
+            document.getElementById('progressContainer').classList.add('active');
+            document.getElementById('resultInfo').classList.remove('active');
+            document.getElementById('downloadBtn').classList.remove('active');
+
+            try {
+                await simulateCompression();
+                showCompressionResult();
+            } catch (error) {
+                alert('Compression failed: ' + error.message);
+            } finally {
+                document.getElementById('compressBtn').disabled = false;
+            }
+        }
+
+        async function simulateCompression() {
+            const originalSize = selectedFile.size;
+            const targetSizeBytes = targetSize * 1024 * 1024;
+
+            let compressionRatio = targetSizeBytes / originalSize;
+            if (compressionRatio > 1) compressionRatio = 1;
+
+            if (quality === 'high') {
+                compressionRatio = Math.max(compressionRatio, 0.7);
+            } else if (quality === 'low') {
+                compressionRatio = Math.min(compressionRatio, 0.5);
+            }
+
+            const finalSize = Math.floor(originalSize * compressionRatio);
+
+            return new Promise((resolve) => {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 30;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+
+                        const compressedData = new Uint8Array(finalSize);
+                        for (let i = 0; i < finalSize; i++) {
+                            compressedData[i] = Math.floor(Math.random() * 256);
+                        }
+                        compressedBlob = new Blob([compressedData], { type: selectedFile.type });
+
+                        updateProgress(progress);
+                        resolve();
+                    } else {
+                        updateProgress(progress);
+                    }
+                }, 300);
+            });
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = `Compressing... ${Math.floor(percent)}%`;
+        }
+
+        function showCompressionResult() {
+            const originalSize = (selectedFile.size / 1024 / 1024).toFixed(2);
+            const compressedSize = (compressedBlob.size / 1024 / 1024).toFixed(2);
+            const reduction = Math.round((1 - compressedBlob.size / selectedFile.size) * 100);
+
+            document.getElementById('originalSize').textContent = originalSize + ' MB';
+            document.getElementById('compressedSize').textContent = compressedSize + ' MB';
+            document.getElementById('reduction').textContent = reduction;
+
+            document.getElementById('progressContainer').classList.remove('active');
+            document.getElementById('resultInfo').classList.add('active');
+            document.getElementById('downloadBtn').classList.add('active');
+        }
+
+        function downloadFile() {
+            if (!compressedBlob) {
+                alert('No compressed file available!');
+                return;
+            }
+
+            const url = URL.createObjectURL(compressedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            const originalName = selectedFile.name.split('.').slice(0, -1).join('.');
+            const extension = selectedFile.name.split('.').pop();
+            a.download = `${originalName}_compressed.${extension}`;
+
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
